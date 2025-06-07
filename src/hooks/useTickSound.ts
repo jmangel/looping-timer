@@ -22,7 +22,8 @@ export const useTickSound = (
 
   // Initialize audio on mount
   useEffect(() => {
-    audioRef.current = new Audio('/sounds/tick.mp3');
+    const publicUrl = process.env.PUBLIC_URL || '';
+    audioRef.current = new Audio(`${publicUrl}/sounds/tick.mp3`);
     audioRef.current.volume = 0.5; // Set moderate volume
 
     return () => {

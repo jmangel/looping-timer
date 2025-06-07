@@ -19,10 +19,6 @@ const App = () => {
       children: [
         {
           index: true,
-          element: <Navigate to="looping_timer" replace />,
-        },
-        {
-          path: 'looping_timer',
           element: <LoopingTimerPage />,
         },
       ],

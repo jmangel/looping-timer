@@ -2,8 +2,11 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('renders navigation and monte carlo page', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  const monteCarloLink = screen.getByText(/monte carlo/i);
+  expect(monteCarloLink).toBeInTheDocument();
+
+  const loopLengthLabel = screen.getByText(/loop length/i);
+  expect(loopLengthLabel).toBeInTheDocument();
 });

@@ -3,6 +3,7 @@ import { Container } from 'react-bootstrap';
 import CircularTimer from '../components/CircularTimer';
 import TimerControls from '../components/TimerControls';
 import { useTimer } from '../hooks/useTimer';
+import { useTickSound } from '../hooks/useTickSound';
 
 /**
  * LoopingTimerPage component that displays a looping circular timer.
@@ -12,6 +13,9 @@ const LoopingTimerPage: React.FC = () => {
   const [loopLengthInSeconds, setLoopLengthInSeconds] = useState(30);
   const { progress, timeRemaining, cyclePosition } =
     useTimer(loopLengthInSeconds);
+
+  // Play tick sound every second
+  useTickSound(timeRemaining);
 
   return (
     <div

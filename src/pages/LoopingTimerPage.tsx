@@ -5,17 +5,17 @@ import TimerControls from '../components/TimerControls';
 import { useTimer } from '../hooks/useTimer';
 
 /**
- * MonteCarloPage component that displays a looping circular timer.
+ * LoopingTimerPage component that displays a looping circular timer.
  * The timer starts when the page loads and loops continuously based on the configured loop length.
  */
-const MonteCarloPage: React.FC = () => {
+const LoopingTimerPage: React.FC = () => {
   const [loopLengthInSeconds, setLoopLengthInSeconds] = useState(30);
   const { progress, timeRemaining, cyclePosition } =
     useTimer(loopLengthInSeconds);
 
   return (
     <div
-      className="monte-carlo-page"
+      className="looping-timer-page"
       style={{
         height: '100vh',
         display: 'flex',
@@ -74,4 +74,4 @@ const MonteCarloPage: React.FC = () => {
   );
 };
 
-export default MonteCarloPage;
+export default LoopingTimerPage;

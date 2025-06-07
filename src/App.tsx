@@ -1,9 +1,14 @@
 import React from 'react';
 import './App.css';
-import Root from './routes/root'
-import { Navigate, RouteObject, RouterProvider, createBrowserRouter } from 'react-router-dom';
+import Root from './routes/root';
+import {
+  Navigate,
+  RouteObject,
+  RouterProvider,
+  createBrowserRouter,
+} from 'react-router-dom';
 import ErrorPage from './pages/ErrorPage';
-import MonteCarloPage from './pages/MonteCarloPage';
+import LoopingTimerPage from './pages/LoopingTimerPage';
 
 const App = () => {
   const routes: RouteObject[] = [
@@ -14,17 +19,17 @@ const App = () => {
       children: [
         {
           index: true,
-          element: <Navigate to="monte_carlo" replace />,
+          element: <Navigate to="looping_timer" replace />,
         },
         {
-          path: "monte_carlo",
-          element: <MonteCarloPage />,
+          path: 'looping_timer',
+          element: <LoopingTimerPage />,
         },
       ],
     },
   ];
 
-  return <RouterProvider router={createBrowserRouter(routes)} />
-}
+  return <RouterProvider router={createBrowserRouter(routes)} />;
+};
 
 export default App;

@@ -45,17 +45,19 @@ export const useTickSound = (
 
   // Play tick sound or speak number when seconds change
   useEffect(() => {
-    if (currentSeconds === undefined || isMuted) return;
+    if (currentSeconds === undefined) return;
 
     const roundedSeconds = Math.ceil(currentSeconds);
     const previousSeconds = previousSecondsRef.current;
 
     // Play sound if seconds have changed
     if (previousSeconds !== null && roundedSeconds !== previousSeconds) {
-      if (useSpeech) {
-        speakNumber(roundedSeconds);
-      } else {
-        playTickSound();
+      if (!isMuted) {
+        if (useSpeech) {
+          speakNumber(roundedSeconds);
+        } else {
+          playTickSound();
+        }
       }
     }
 

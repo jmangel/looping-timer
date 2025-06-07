@@ -20,6 +20,31 @@ const mockAudioInstance = {
 // Mock Audio constructor
 (global as any).Audio = jest.fn().mockImplementation(() => mockAudioInstance);
 
+// Mock Speech Synthesis API
+const mockSpeak = jest.fn();
+const mockCancel = jest.fn();
+const mockSpeechSynthesis = {
+  speak: mockSpeak,
+  cancel: mockCancel,
+  speaking: false,
+  pending: false,
+  paused: false,
+};
+
+Object.defineProperty(global, 'speechSynthesis', {
+  value: mockSpeechSynthesis,
+  writable: true,
+});
+
+(global as any).SpeechSynthesisUtterance = jest
+  .fn()
+  .mockImplementation((text) => ({
+    text,
+    volume: 1,
+    rate: 1,
+    pitch: 1,
+  }));
+
 describe('useTickSound', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -31,47 +56,82 @@ describe('useTickSound', () => {
     expect(global.Audio).toHaveBeenCalledWith('/sounds/tick.mp3');
   });
 
-  it('should play sound when seconds change from higher to lower value', () => {
+  it('should play sound when seconds change', () => {
     const { rerender } = renderHook(
-      ({ timeRemaining }) => useTickSound(timeRemaining),
-      { initialProps: { timeRemaining: 30.5 } }
+      ({ currentSeconds }) => useTickSound(currentSeconds),
+      { initialProps: { currentSeconds: 1.2 } }
     );
 
     // Clear any calls from initial render
     jest.clearAllMocks();
 
-    // Second changes from 31 to 30 (30.5 -> 29.8)
-    rerender({ timeRemaining: 29.8 });
+    // Second changes from 2 to 1 (1.2 -> 0.8)
+    rerender({ currentSeconds: 0.8 });
 
     expect(mockPlay).toHaveBeenCalled();
   });
 
-  it('should not play sound when seconds remain the same', () => {
+  it('should not play sound when muted', () => {
     const { rerender } = renderHook(
-      ({ timeRemaining }) => useTickSound(timeRemaining),
-      { initialProps: { timeRemaining: 30.3 } }
+      ({ currentSeconds, isMuted }) =>
+        useTickSound(currentSeconds, { isMuted }),
+      { initialProps: { currentSeconds: 1.2, isMuted: true } }
     );
 
     // Clear any calls from initial render
     jest.clearAllMocks();
 
-    // Same second (30.3 -> 30.1)
-    rerender({ timeRemaining: 30.1 });
+    // Second changes from 2 to 1 (1.2 -> 0.8)
+    rerender({ currentSeconds: 0.8, isMuted: true });
+
+    expect(mockPlay).not.toHaveBeenCalled();
+    expect(mockSpeak).not.toHaveBeenCalled();
+  });
+
+  it('should speak number when useSpeech is true', () => {
+    const { rerender } = renderHook(
+      ({ currentSeconds, useSpeech }) =>
+        useTickSound(currentSeconds, { useSpeech }),
+      { initialProps: { currentSeconds: 1.2, useSpeech: true } }
+    );
+
+    // Clear any calls from initial render
+    jest.clearAllMocks();
+
+    // Second changes from 2 to 1 (1.2 -> 0.8)
+    rerender({ currentSeconds: 0.8, useSpeech: true });
+
+    expect(mockPlay).not.toHaveBeenCalled();
+    expect(mockSpeak).toHaveBeenCalled();
+    expect(global.SpeechSynthesisUtterance).toHaveBeenCalledWith('1');
+  });
+
+  it('should not play sound when seconds remain the same', () => {
+    const { rerender } = renderHook(
+      ({ currentSeconds }) => useTickSound(currentSeconds),
+      { initialProps: { currentSeconds: 1.3 } }
+    );
+
+    // Clear any calls from initial render
+    jest.clearAllMocks();
+
+    // Same second (1.3 -> 1.1)
+    rerender({ currentSeconds: 1.1 });
 
     expect(mockPlay).not.toHaveBeenCalled();
   });
 
-  it('should play sound when timer loops back to start', () => {
+  it('should play sound when timer increments to next second', () => {
     const { rerender } = renderHook(
-      ({ timeRemaining }) => useTickSound(timeRemaining),
-      { initialProps: { timeRemaining: 0.9 } }
+      ({ currentSeconds }) => useTickSound(currentSeconds),
+      { initialProps: { currentSeconds: 0.9 } }
     );
 
     // Clear any calls from initial render
     jest.clearAllMocks();
 
-    // Timer loops back (0.9 -> 29.9) - this should trigger the loop-back condition
-    rerender({ timeRemaining: 29.9 });
+    // Timer increments to next second (0.9 -> 1.1)
+    rerender({ currentSeconds: 1.1 });
 
     expect(mockPlay).toHaveBeenCalled();
   });
@@ -81,14 +141,14 @@ describe('useTickSound', () => {
     mockPlay.mockRejectedValueOnce(new Error('Audio play failed'));
 
     const { rerender } = renderHook(
-      ({ timeRemaining }) => useTickSound(timeRemaining),
-      { initialProps: { timeRemaining: 30.5 } }
+      ({ currentSeconds }) => useTickSound(currentSeconds),
+      { initialProps: { currentSeconds: 1.5 } }
     );
 
     // Clear initial calls
     jest.clearAllMocks();
 
-    rerender({ timeRemaining: 29.8 });
+    rerender({ currentSeconds: 0.8 });
 
     // Wait for async operation to complete
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -103,9 +163,17 @@ describe('useTickSound', () => {
   });
 
   it('should not play sound on first render', () => {
-    renderHook(() => useTickSound(29.5));
+    renderHook(() => useTickSound(1.5));
 
     // Should not play on initial render since there's no previous value to compare
     expect(mockPlay).not.toHaveBeenCalled();
+  });
+
+  it('should clean up speech synthesis on unmount', () => {
+    const { unmount } = renderHook(() => useTickSound(1, { useSpeech: true }));
+
+    unmount();
+
+    expect(mockCancel).toHaveBeenCalled();
   });
 });

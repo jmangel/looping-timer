@@ -6,6 +6,10 @@ describe('TimerControls', () => {
   const defaultProps = {
     loopLength: 30,
     onLoopLengthChange: jest.fn(),
+    isMuted: false,
+    onMuteChange: jest.fn(),
+    useSpeech: false,
+    onSpeechChange: jest.fn(),
   };
 
   beforeEach(() => {
@@ -23,7 +27,7 @@ describe('TimerControls', () => {
   it('should display the seconds label', () => {
     render(<TimerControls {...defaultProps} />);
 
-    expect(screen.getByText('seconds')).toBeInTheDocument();
+    expect(screen.getByText('sec')).toBeInTheDocument();
   });
 
   it('should call onLoopLengthChange when valid number is entered', () => {
@@ -83,5 +87,59 @@ describe('TimerControls', () => {
     expect(label).toBeInTheDocument();
     expect(input).toHaveAttribute('id', 'loop-length-input');
     expect(label).toHaveAttribute('for', 'loop-length-input');
+  });
+
+  it('should render mute switch with correct initial state', () => {
+    render(<TimerControls {...defaultProps} />);
+
+    const muteSwitch = screen.getByLabelText(/mute/i);
+    expect(muteSwitch).toBeInTheDocument();
+    expect(muteSwitch).not.toBeChecked();
+  });
+
+  it('should call onMuteChange when mute switch is toggled', () => {
+    const onMuteChange = jest.fn();
+    render(<TimerControls {...defaultProps} onMuteChange={onMuteChange} />);
+
+    const muteSwitch = screen.getByLabelText(/mute/i);
+    fireEvent.click(muteSwitch);
+
+    expect(onMuteChange).toHaveBeenCalledWith(true);
+  });
+
+  it('should render speech switch with correct initial state', () => {
+    render(<TimerControls {...defaultProps} />);
+
+    const speechSwitch = screen.getByLabelText(/speak numbers/i);
+    expect(speechSwitch).toBeInTheDocument();
+    expect(speechSwitch).not.toBeChecked();
+    expect(speechSwitch).not.toBeDisabled();
+  });
+
+  it('should call onSpeechChange when speech switch is toggled', () => {
+    const onSpeechChange = jest.fn();
+    render(<TimerControls {...defaultProps} onSpeechChange={onSpeechChange} />);
+
+    const speechSwitch = screen.getByLabelText(/speak numbers/i);
+    fireEvent.click(speechSwitch);
+
+    expect(onSpeechChange).toHaveBeenCalledWith(true);
+  });
+
+  it('should disable speech switch when muted', () => {
+    render(<TimerControls {...defaultProps} isMuted={true} />);
+
+    const speechSwitch = screen.getByLabelText(/speak numbers/i);
+    expect(speechSwitch).toBeDisabled();
+  });
+
+  it('should show switches as checked when props are true', () => {
+    render(<TimerControls {...defaultProps} isMuted={true} useSpeech={true} />);
+
+    const muteSwitch = screen.getByLabelText(/mute/i);
+    const speechSwitch = screen.getByLabelText(/speak numbers/i);
+
+    expect(muteSwitch).toBeChecked();
+    expect(speechSwitch).toBeChecked();
   });
 });

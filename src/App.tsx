@@ -29,7 +29,11 @@ const App = () => {
     },
   ];
 
-  return <RouterProvider router={createBrowserRouter(routes)} />;
+  // Use basename for GitHub Pages deployment
+  const basename =
+    process.env.NODE_ENV === 'production' ? '/looping-timer' : '';
+
+  return <RouterProvider router={createBrowserRouter(routes, { basename })} />;
 };
 
 export default App;

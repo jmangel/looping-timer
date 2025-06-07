@@ -15,11 +15,8 @@ const LoopingTimerPage: React.FC = () => {
 
   return (
     <div
-      className="looping-timer-page"
+      className="looping-timer-page d-flex flex-column flex-grow-1"
       style={{
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
         overflow: 'hidden',
       }}
     >
@@ -38,15 +35,14 @@ const LoopingTimerPage: React.FC = () => {
           overflow: 'hidden',
         }}
       >
-        <Container className="h-100 d-flex flex-column align-items-center justify-content-center">
-          <div className="text-center w-100 h-100 d-flex flex-column justify-content-center">
+        <Container className="h-100 d-flex flex-column flex-grow-1 align-items-center justify-content-center">
+          <div className="text-center w-100 h-100 d-flex flex-column flex-grow-1 justify-content-center">
             {/* Timer container with conservative sizing to leave room for text */}
             <div
-              className="d-flex align-items-center justify-content-center"
+              className="d-flex flex-grow-1 align-items-center justify-content-center"
               style={{
                 maxWidth: '100%',
                 aspectRatio: '1',
-                width: 'min(100%, 60vh, 350px)', // More conservative sizing
                 alignSelf: 'center',
                 flexShrink: 1,
               }}

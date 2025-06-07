@@ -16,12 +16,7 @@ describe('CircularTimer', () => {
 
   it('should render with custom size', () => {
     render(
-      <CircularTimer
-        progress={0.5}
-        currentSeconds={15}
-        totalSeconds={30}
-        size={200}
-      />
+      <CircularTimer progress={0.5} currentSeconds={15} totalSeconds={30} />
     );
 
     const svg = document.querySelector('svg');
@@ -101,12 +96,7 @@ describe('CircularTimer', () => {
 
   it('should apply correct transform to progress circle', () => {
     render(
-      <CircularTimer
-        progress={0.5}
-        currentSeconds={15}
-        totalSeconds={30}
-        size={300}
-      />
+      <CircularTimer progress={0.5} currentSeconds={15} totalSeconds={30} />
     );
 
     const svg = document.querySelector('svg');

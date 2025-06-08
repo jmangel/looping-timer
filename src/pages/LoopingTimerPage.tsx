@@ -1,25 +1,36 @@
 import React, { useState } from 'react';
-import { Container } from 'react-bootstrap';
+import { Container, Alert } from 'react-bootstrap';
 import CircularTimer from '../components/CircularTimer';
 import TimerControls from '../components/TimerControls';
 import { useTimer } from '../hooks/useTimer';
 import { useTickSound } from '../hooks/useTickSound';
+import { useBackgroundExecution } from '../hooks/useBackgroundExecution';
 
 /**
  * LoopingTimerPage component that displays a looping circular timer.
  * The timer starts when the page loads and loops continuously based on the configured loop length.
+ * Enhanced with background execution capabilities for uninterrupted operation.
  */
 const LoopingTimerPage: React.FC = () => {
   const [loopLengthInSeconds, setLoopLengthInSeconds] = useState(30);
   const [tickInterval, setTickInterval] = useState(5);
   const [isMuted, setIsMuted] = useState(false);
   const [useSpeech, setUseSpeech] = useState(false);
+  const [showPermissionAlert, setShowPermissionAlert] = useState(true);
 
   const { progress, timeRemaining, cyclePosition } =
     useTimer(loopLengthInSeconds);
 
+  const backgroundExecution = useBackgroundExecution();
+
   // Play tick sound every interval with current settings - using cyclePosition (current seconds)
   useTickSound(cyclePosition, { isMuted, useSpeech, tickInterval });
+
+  const handlePermissionRequest = async () => {
+    await backgroundExecution.requestBackgroundPermissions();
+    await backgroundExecution.resumeAudioContext();
+    setShowPermissionAlert(false);
+  };
 
   return (
     <div
@@ -28,6 +39,51 @@ const LoopingTimerPage: React.FC = () => {
         overflow: 'hidden',
       }}
     >
+      {/* Background Permission Alert */}
+      {showPermissionAlert &&
+        backgroundExecution.hasUserInteracted &&
+        !backgroundExecution.audioPermissionGranted && (
+          <Alert
+            variant="info"
+            dismissible
+            onClose={() => setShowPermissionAlert(false)}
+          >
+            <Alert.Heading>Enable Background Audio</Alert.Heading>
+            <p>
+              To ensure timer audio continues when this tab is in the
+              background, please click "Allow Background Audio" below. This will
+              request necessary permissions for uninterrupted timer operation.
+            </p>
+            <div className="d-flex gap-2">
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={handlePermissionRequest}
+              >
+                Allow Background Audio
+              </button>
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => setShowPermissionAlert(false)}
+              >
+                Maybe Later
+              </button>
+            </div>
+          </Alert>
+        )}
+
+      {/* Status indicator for background execution */}
+      {!backgroundExecution.isVisible && (
+        <div
+          className="bg-warning text-dark px-3 py-1 text-center small"
+          style={{ fontSize: '0.875rem' }}
+        >
+          ⏰ Timer running in background
+          {backgroundExecution.audioPermissionGranted
+            ? ' with audio enabled'
+            : ' (audio may be limited)'}
+        </div>
+      )}
+
       {/* Controls section - always visible */}
       <TimerControls
         loopLength={loopLengthInSeconds}
@@ -76,6 +132,19 @@ const LoopingTimerPage: React.FC = () => {
               <h2 className="text-primary" style={{ fontSize: '1.5rem' }}>
                 {Math.ceil(timeRemaining).toFixed(0)}s
               </h2>
+
+              {/* Background execution status */}
+              <div className="mt-2 small text-muted">
+                {backgroundExecution.supportsBackgroundExecution ? (
+                  <span className="text-success">
+                    ✓ Background execution supported
+                  </span>
+                ) : (
+                  <span className="text-warning">
+                    ⚠ Limited background support
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </Container>

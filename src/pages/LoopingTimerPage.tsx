@@ -1,25 +1,40 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { Container } from 'react-bootstrap';
 import CircularTimer from '../components/CircularTimer';
 import TimerControls from '../components/TimerControls';
 import { useTimer } from '../hooks/useTimer';
 import { useTickSound } from '../hooks/useTickSound';
+import { useQueryParams, TimerConfig } from '../hooks/useQueryParams';
 
 /**
  * LoopingTimerPage component that displays a looping circular timer.
  * The timer starts when the page loads and loops continuously based on the configured loop length.
+ * Timer settings are persisted in URL query parameters.
  */
 const LoopingTimerPage: React.FC = () => {
-  const [loopLengthInSeconds, setLoopLengthInSeconds] = useState(30);
-  const [tickInterval, setTickInterval] = useState(5);
-  const [isMuted, setIsMuted] = useState(false);
-  const [useSpeech, setUseSpeech] = useState(false);
+  // Default configuration values - memoized to prevent re-renders
+  const defaultConfig: TimerConfig = useMemo(
+    () => ({
+      loopLength: 30,
+      tickInterval: 5,
+      isMuted: false,
+      useSpeech: false,
+    }),
+    []
+  );
 
-  const { progress, timeRemaining, cyclePosition } =
-    useTimer(loopLengthInSeconds);
+  const { values: config, updateValue } = useQueryParams(defaultConfig);
+
+  const { progress, timeRemaining, cyclePosition } = useTimer(
+    config.loopLength
+  );
 
   // Play tick sound every interval with current settings - using cyclePosition (current seconds)
-  useTickSound(cyclePosition, { isMuted, useSpeech, tickInterval });
+  useTickSound(cyclePosition, {
+    isMuted: config.isMuted,
+    useSpeech: config.useSpeech,
+    tickInterval: config.tickInterval,
+  });
 
   return (
     <div
@@ -30,14 +45,16 @@ const LoopingTimerPage: React.FC = () => {
     >
       {/* Controls section - always visible */}
       <TimerControls
-        loopLength={loopLengthInSeconds}
-        onLoopLengthChange={setLoopLengthInSeconds}
-        tickInterval={tickInterval}
-        onTickIntervalChange={setTickInterval}
-        isMuted={isMuted}
-        onMuteChange={setIsMuted}
-        useSpeech={useSpeech}
-        onSpeechChange={setUseSpeech}
+        loopLength={config.loopLength}
+        onLoopLengthChange={(length) => updateValue('loopLength', length)}
+        tickInterval={config.tickInterval}
+        onTickIntervalChange={(interval) =>
+          updateValue('tickInterval', interval)
+        }
+        isMuted={config.isMuted}
+        onMuteChange={(muted) => updateValue('isMuted', muted)}
+        useSpeech={config.useSpeech}
+        onSpeechChange={(useSpeech) => updateValue('useSpeech', useSpeech)}
       />
 
       {/* Main timer area - responsive and centered */}
@@ -64,7 +81,7 @@ const LoopingTimerPage: React.FC = () => {
               <CircularTimer
                 progress={progress}
                 currentSeconds={cyclePosition}
-                totalSeconds={loopLengthInSeconds}
+                totalSeconds={config.loopLength}
               />
             </div>
 

@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 interface TickSoundOptions {
   isMuted?: boolean;
   useSpeech?: boolean;
+  tickInterval?: number;
 }
 
 /**
@@ -16,7 +17,7 @@ export const useTickSound = (
   currentSeconds?: number,
   options: TickSoundOptions = {}
 ) => {
-  const { isMuted = false, useSpeech = false } = options;
+  const { isMuted = false, useSpeech = false, tickInterval = 1 } = options;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const previousSecondsRef = useRef<number | null>(null);
 
@@ -53,16 +54,24 @@ export const useTickSound = (
     // Play sound if seconds have changed
     if (previousSeconds !== null && roundedSeconds !== previousSeconds) {
       if (!isMuted) {
-        if (useSpeech) {
-          speakNumber(roundedSeconds);
-        } else {
-          playTickSound();
+        // For intervals > 1, only play on multiples of the interval (excluding 0)
+        // For interval = 1, play every second
+        const shouldPlay =
+          tickInterval === 1 ||
+          (roundedSeconds > 0 && roundedSeconds % tickInterval === 0);
+
+        if (shouldPlay) {
+          if (useSpeech) {
+            speakNumber(roundedSeconds);
+          } else {
+            playTickSound();
+          }
         }
       }
     }
 
     previousSecondsRef.current = roundedSeconds;
-  }, [currentSeconds, isMuted, useSpeech]);
+  }, [currentSeconds, isMuted, useSpeech, tickInterval]);
 
   const playTickSound = async () => {
     if (audioRef.current) {

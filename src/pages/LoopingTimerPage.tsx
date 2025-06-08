@@ -11,14 +11,15 @@ import { useTickSound } from '../hooks/useTickSound';
  */
 const LoopingTimerPage: React.FC = () => {
   const [loopLengthInSeconds, setLoopLengthInSeconds] = useState(30);
+  const [tickInterval, setTickInterval] = useState(5);
   const [isMuted, setIsMuted] = useState(false);
   const [useSpeech, setUseSpeech] = useState(false);
 
   const { progress, timeRemaining, cyclePosition } =
     useTimer(loopLengthInSeconds);
 
-  // Play tick sound every second with current settings - using cyclePosition (current seconds)
-  useTickSound(cyclePosition, { isMuted, useSpeech });
+  // Play tick sound every interval with current settings - using cyclePosition (current seconds)
+  useTickSound(cyclePosition, { isMuted, useSpeech, tickInterval });
 
   return (
     <div
@@ -31,6 +32,8 @@ const LoopingTimerPage: React.FC = () => {
       <TimerControls
         loopLength={loopLengthInSeconds}
         onLoopLengthChange={setLoopLengthInSeconds}
+        tickInterval={tickInterval}
+        onTickIntervalChange={setTickInterval}
         isMuted={isMuted}
         onMuteChange={setIsMuted}
         useSpeech={useSpeech}

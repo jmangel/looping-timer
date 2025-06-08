@@ -176,4 +176,155 @@ describe('useTickSound', () => {
 
     expect(mockCancel).toHaveBeenCalled();
   });
+
+  describe('tickInterval functionality', () => {
+    it('should only play sound at specified intervals', () => {
+      const { rerender } = renderHook(
+        ({ currentSeconds }) =>
+          useTickSound(currentSeconds, { tickInterval: 5 }),
+        { initialProps: { currentSeconds: 29.8 } }
+      );
+
+      // Clear any calls from initial render
+      jest.clearAllMocks();
+
+      // Change to second 29 (not a multiple of 5)
+      rerender({ currentSeconds: 28.9 });
+      expect(mockPlay).not.toHaveBeenCalled();
+
+      // Change to second 25 (multiple of 5)
+      rerender({ currentSeconds: 24.9 });
+      expect(mockPlay).toHaveBeenCalledTimes(1);
+
+      // Clear calls
+      jest.clearAllMocks();
+
+      // Change to second 23 (not a multiple of 5)
+      rerender({ currentSeconds: 22.8 });
+      expect(mockPlay).not.toHaveBeenCalled();
+
+      // Change to second 20 (multiple of 5)
+      rerender({ currentSeconds: 19.9 });
+      expect(mockPlay).toHaveBeenCalledTimes(1);
+    });
+
+    it('should speak numbers only at specified intervals', () => {
+      const { rerender } = renderHook(
+        ({ currentSeconds }) =>
+          useTickSound(currentSeconds, {
+            useSpeech: true,
+            tickInterval: 5,
+          }),
+        { initialProps: { currentSeconds: 12.8 } }
+      );
+
+      // Clear any calls from initial render
+      jest.clearAllMocks();
+
+      // Change to second 12 (not a multiple of 5)
+      rerender({ currentSeconds: 11.9 });
+      expect(mockSpeak).not.toHaveBeenCalled();
+
+      // Change to second 10 (multiple of 5)
+      rerender({ currentSeconds: 9.9 });
+      expect(mockSpeak).toHaveBeenCalledTimes(1);
+      expect(global.SpeechSynthesisUtterance).toHaveBeenCalledWith('10');
+    });
+
+    it('should work with tickInterval of 1 (every second)', () => {
+      const { rerender } = renderHook(
+        ({ currentSeconds }) =>
+          useTickSound(currentSeconds, { tickInterval: 1 }),
+        { initialProps: { currentSeconds: 3.8 } }
+      );
+
+      // Clear any calls from initial render
+      jest.clearAllMocks();
+
+      // Every second should trigger sound
+      rerender({ currentSeconds: 2.9 });
+      expect(mockPlay).toHaveBeenCalledTimes(1);
+
+      jest.clearAllMocks();
+      rerender({ currentSeconds: 1.8 });
+      expect(mockPlay).toHaveBeenCalledTimes(1);
+    });
+
+    it('should default to tickInterval of 1 when not specified', () => {
+      const { rerender } = renderHook(
+        ({ currentSeconds }) => useTickSound(currentSeconds),
+        { initialProps: { currentSeconds: 5.8 } }
+      );
+
+      // Clear any calls from initial render
+      jest.clearAllMocks();
+
+      // Should play every second (default interval of 1)
+      rerender({ currentSeconds: 4.9 });
+      expect(mockPlay).toHaveBeenCalledTimes(1);
+
+      jest.clearAllMocks();
+      rerender({ currentSeconds: 3.9 });
+      expect(mockPlay).toHaveBeenCalledTimes(1);
+    });
+
+    it('should respect mute setting even with tickInterval', () => {
+      const { rerender } = renderHook(
+        ({ currentSeconds }) =>
+          useTickSound(currentSeconds, {
+            tickInterval: 5,
+            isMuted: true,
+          }),
+        { initialProps: { currentSeconds: 15.2 } }
+      );
+
+      // Clear any calls from initial render
+      jest.clearAllMocks();
+
+      // Change to second 10 (multiple of 5) but muted
+      rerender({ currentSeconds: 9.9 });
+      expect(mockPlay).not.toHaveBeenCalled();
+      expect(mockSpeak).not.toHaveBeenCalled();
+    });
+
+    it('should handle edge case when timer reaches zero', () => {
+      const { rerender } = renderHook(
+        ({ currentSeconds }) =>
+          useTickSound(currentSeconds, { tickInterval: 5 }),
+        { initialProps: { currentSeconds: 1.2 } }
+      );
+
+      // Clear any calls from initial render
+      jest.clearAllMocks();
+
+      // Timer reaches 0, which should not be treated as a multiple of 5
+      rerender({ currentSeconds: 0 });
+      expect(mockPlay).not.toHaveBeenCalled();
+    });
+
+    it('should work with larger intervals', () => {
+      const { rerender } = renderHook(
+        ({ currentSeconds }) =>
+          useTickSound(currentSeconds, { tickInterval: 10 }),
+        { initialProps: { currentSeconds: 35.5 } }
+      );
+
+      // Clear any calls from initial render
+      jest.clearAllMocks();
+
+      // Change to second 32 (not a multiple of 10)
+      rerender({ currentSeconds: 31.8 });
+      expect(mockPlay).not.toHaveBeenCalled();
+
+      // Change to second 30 (multiple of 10)
+      rerender({ currentSeconds: 29.9 });
+      expect(mockPlay).toHaveBeenCalledTimes(1);
+
+      jest.clearAllMocks();
+
+      // Change to second 20 (multiple of 10)
+      rerender({ currentSeconds: 19.8 });
+      expect(mockPlay).toHaveBeenCalledTimes(1);
+    });
+  });
 });

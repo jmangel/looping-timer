@@ -4,6 +4,8 @@ import { Form, InputGroup, Row, Col } from 'react-bootstrap';
 interface TimerControlsProps {
   loopLength: number;
   onLoopLengthChange: (length: number) => void;
+  tickInterval: number;
+  onTickIntervalChange: (interval: number) => void;
   isMuted: boolean;
   onMuteChange: (muted: boolean) => void;
   useSpeech: boolean;
@@ -15,6 +17,8 @@ interface TimerControlsProps {
  *
  * @param loopLength - Current loop length in seconds
  * @param onLoopLengthChange - Callback when loop length changes
+ * @param tickInterval - Interval in seconds at which to tick/speak
+ * @param onTickIntervalChange - Callback when tick interval changes
  * @param isMuted - Whether audio is muted
  * @param onMuteChange - Callback when mute state changes
  * @param useSpeech - Whether to use speech instead of tick sound
@@ -23,6 +27,8 @@ interface TimerControlsProps {
 const TimerControls: React.FC<TimerControlsProps> = ({
   loopLength,
   onLoopLengthChange,
+  tickInterval,
+  onTickIntervalChange,
   isMuted,
   onMuteChange,
   useSpeech,
@@ -32,6 +38,15 @@ const TimerControls: React.FC<TimerControlsProps> = ({
     const value = parseInt(event.target.value, 10);
     if (!isNaN(value) && value > 0) {
       onLoopLengthChange(value);
+    }
+  };
+
+  const handleTickIntervalChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = parseInt(event.target.value, 10);
+    if (!isNaN(value) && value > 0) {
+      onTickIntervalChange(value);
     }
   };
 
@@ -63,6 +78,31 @@ const TimerControls: React.FC<TimerControlsProps> = ({
                 max="3600"
                 value={loopLength}
                 onChange={handleInputChange}
+                className="text-center"
+                size="sm"
+              />
+              <InputGroup.Text>sec</InputGroup.Text>
+            </InputGroup>
+          </div>
+        </Col>
+
+        {/* Tick Interval Control */}
+        <Col xs="auto">
+          <div className="d-flex align-items-center">
+            <Form.Label
+              htmlFor="tick-interval-input"
+              className="me-2 mb-0 fw-semibold"
+            >
+              Tick Every:
+            </Form.Label>
+            <InputGroup style={{ maxWidth: '150px' }}>
+              <Form.Control
+                id="tick-interval-input"
+                type="number"
+                min="1"
+                max="60"
+                value={tickInterval}
+                onChange={handleTickIntervalChange}
                 className="text-center"
                 size="sm"
               />

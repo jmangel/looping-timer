@@ -6,6 +6,8 @@ describe('TimerControls', () => {
   const defaultProps = {
     loopLength: 30,
     onLoopLengthChange: jest.fn(),
+    tickInterval: 5,
+    onTickIntervalChange: jest.fn(),
     isMuted: false,
     onMuteChange: jest.fn(),
     useSpeech: false,
@@ -27,7 +29,8 @@ describe('TimerControls', () => {
   it('should display the seconds label', () => {
     render(<TimerControls {...defaultProps} />);
 
-    expect(screen.getByText('sec')).toBeInTheDocument();
+    const secLabels = screen.getAllByText('sec');
+    expect(secLabels).toHaveLength(2); // One for loop length, one for tick interval
   });
 
   it('should call onLoopLengthChange when valid number is entered', () => {
@@ -87,6 +90,73 @@ describe('TimerControls', () => {
     expect(label).toBeInTheDocument();
     expect(input).toHaveAttribute('id', 'loop-length-input');
     expect(label).toHaveAttribute('for', 'loop-length-input');
+  });
+
+  it('should render the tick interval input with correct initial value', () => {
+    render(<TimerControls {...defaultProps} />);
+
+    const input = screen.getByLabelText(/tick every/i);
+    expect(input).toBeInTheDocument();
+    expect(input).toHaveValue(5);
+  });
+
+  it('should call onTickIntervalChange when valid number is entered', () => {
+    const onTickIntervalChange = jest.fn();
+    render(
+      <TimerControls
+        {...defaultProps}
+        onTickIntervalChange={onTickIntervalChange}
+      />
+    );
+
+    const input = screen.getByLabelText(/tick every/i);
+    fireEvent.change(input, { target: { value: '10' } });
+
+    expect(onTickIntervalChange).toHaveBeenCalledWith(10);
+  });
+
+  it('should not call onTickIntervalChange for invalid input', () => {
+    const onTickIntervalChange = jest.fn();
+    render(
+      <TimerControls
+        {...defaultProps}
+        onTickIntervalChange={onTickIntervalChange}
+      />
+    );
+
+    const input = screen.getByLabelText(/tick every/i);
+
+    // Test with negative number
+    fireEvent.change(input, { target: { value: '-5' } });
+    expect(onTickIntervalChange).not.toHaveBeenCalled();
+
+    // Test with zero
+    fireEvent.change(input, { target: { value: '0' } });
+    expect(onTickIntervalChange).not.toHaveBeenCalled();
+
+    // Test with non-numeric value
+    fireEvent.change(input, { target: { value: 'abc' } });
+    expect(onTickIntervalChange).not.toHaveBeenCalled();
+  });
+
+  it('should have correct tick interval input constraints', () => {
+    render(<TimerControls {...defaultProps} />);
+
+    const input = screen.getByLabelText(/tick every/i) as HTMLInputElement;
+    expect(input.type).toBe('number');
+    expect(input.min).toBe('1');
+    expect(input.max).toBe('60');
+  });
+
+  it('should have proper accessibility attributes for tick interval', () => {
+    render(<TimerControls {...defaultProps} />);
+
+    const label = screen.getByText(/tick every/i);
+    const input = screen.getByLabelText(/tick every/i);
+
+    expect(label).toBeInTheDocument();
+    expect(input).toHaveAttribute('id', 'tick-interval-input');
+    expect(label).toHaveAttribute('for', 'tick-interval-input');
   });
 
   it('should render mute switch with correct initial state', () => {
